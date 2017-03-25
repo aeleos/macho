@@ -273,31 +273,8 @@ public:                                                                        \
   using LINK::machine;                                                         \
   /* must have these methods to quieten gcc */                                 \
   template <class U> void setState() { LINK::template setState<U>(); }         \
-  template <class U, class P1> void setState(const P1 &p1) {                   \
-    LINK::template setState<U, P1>(p1);                                        \
-  }                                                                            \
-  template <class U, class P1, class P2>                                       \
-  void setState(const P1 &p1, const P2 &p2) {                                  \
-    LINK::template setState<U, P1, P2>(p1, p2);                                \
-  }                                                                            \
-  template <class U, class P1, class P2, class P3>                             \
-  void setState(const P1 &p1, const P2 &p2, const P3 &p3) {                    \
-    LINK::template setState<U, P1, P2>(p1, p2, p3);                            \
-  }                                                                            \
-  template <class U, class P1, class P2, class P3, class P4>                   \
-  void setState(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {      \
-    LINK::template setState<U, P1, P2>(p1, p2, p3, p4);                        \
-  }                                                                            \
-  template <class U, class P1, class P2, class P3, class P4, class P5>         \
-  void setState(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4,        \
-                const P5 &p5) {                                                \
-    LINK::template setState<U, P1, P2>(p1, p2, p3, p4, p5);                    \
-  }                                                                            \
-  template <class U, class P1, class P2, class P3, class P4, class P5,         \
-            class P6>                                                          \
-  void setState(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4,        \
-                const P5 &p5, const P6 &p6) {                                  \
-    LINK::template setState<U, P1, P2>(p1, p2, p3, p4, p5, p6);                \
+  template <class U, class... P> void setState(const P... p) {                 \
+    LINK::template setState<U, P...>(p...);                                    \
   }                                                                            \
   template <class U> void setStateHistory() {                                  \
     LINK::template setStateHistory<U>();                                       \
@@ -488,24 +465,7 @@ protected:
   // setState<StateA>("someData");
   template <class S> void setState();
 
-  template <class S, class P1> void setState(const P1 &p1);
-
-  template <class S, class P1, class P2>
-  void setState(const P1 &p1, const P2 &p2);
-
-  template <class S, class P1, class P2, class P3>
-  void setState(const P1 &p1, const P2 &p2, const P3 &p3);
-
-  template <class S, class P1, class P2, class P3, class P4>
-  void setState(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
-
-  template <class S, class P1, class P2, class P3, class P4, class P5>
-  void setState(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4,
-                const P5 &p5);
-
-  template <class S, class P1, class P2, class P3, class P4, class P5, class P6>
-  void setState(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4,
-                const P5 &p5, const P6 &p6);
+  template <class S, class... P> void setState(const P... p);
 
   // Initiate transition to a state's history.
   // If state has no history, transition is to the state itself.
@@ -908,6 +868,36 @@ template <class TOP> class IEvent : protected _IEventBase {
   friend class Machine<TOP>;
   friend class TopBase<TOP>;
 };
+
+// Event with one parameter
+// template <class TOP, class R, class... P> class _Event1 : public IEvent<TOP>
+// {
+//   typedef R (TOP::*Signature)(P...);
+//
+// public:
+//   _Event1(Signature handler, const typename DR<P...>::T p)
+//       : myHandler(handler), tuple_(std::tuple<DR<P...>::T>(p...)) {}
+//
+// protected:
+//   void dispatch(_StateInstance &instance) {
+//     TOP &behaviour = static_cast<TOP &>(instance.specification());
+//     (behaviour.*myHandler)(myParam1);
+//   }
+//
+//   Signature myHandler;
+//
+// private:
+//   template <std::size_t... Is>
+//   void callDispatchWithTuple(const std::tuple<P...> &tuple,
+//                              _StateInstance &instance,
+//                              std::index_sequence<Is...>) {
+//     // yadda(std::get<Is>(tuple)...);
+//     ::_VS8_Bug_101615::execute<S, P...>(instance, std::get<Is>(tuple)...);
+//   }
+//
+//   std::tuple<typename DR<P...>::T> tuple_;
+//   // typename DR<P1>::T myParam1;
+// };
 
 // Event with four parameters
 template <class TOP, class R, class P1, class P2, class P3, class P4, class P5,
@@ -1419,37 +1409,8 @@ typedef Alias StateAlias;
 // Create alias with 0 to 6 parameters.
 template <class S> Alias State() { return Alias(S::key()); }
 
-template <class S, class P1> Alias State(const P1 &p1) {
-  return Alias(S::key(), new _InitializerMain<S, P1>(p1));
-}
-
-template <class S, class P1, class P2> Alias State(const P1 &p1, const P2 &p2) {
-  return Alias(S::key(), new _InitializerMain<S, P1, P2>(p1, p2));
-}
-
-template <class S, class P1, class P2, class P3>
-Alias State(const P1 &p1, const P2 &p2, const P3 &p3) {
-  return Alias(S::key(), new _InitializerMain<S, P1, P2, P3>(p1, p2, p3));
-}
-
-template <class S, class P1, class P2, class P3, class P4>
-Alias State(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-  return Alias(S::key(),
-               new _InitializerMain<S, P1, P2, P3, P4>(p1, p2, p3, p4));
-}
-
-template <class S, class P1, class P2, class P3, class P4, class P5>
-Alias State(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4,
-            const P5 &p5) {
-  return Alias(S::key(),
-               new _InitializerMain<S, P1, P2, P3, P4, P5>(p1, p2, p3, p4, p5));
-}
-
-template <class S, class P1, class P2, class P3, class P4, class P5, class P6>
-Alias State(const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4,
-            const P5 &p5, const P6 &p6) {
-  return Alias(S::key(), new _InitializerMain<S, P1, P2, P3, P4, P5, P6>(
-                             p1, p2, p3, p4, p5, p6));
+template <class S, class... P> Alias State(const P... p) {
+  return Alias(S::key(), new _InitializerMain<S, P...>(p...));
 }
 
 // Create alias for state's history: not the current history state, but
@@ -1637,61 +1598,17 @@ const ID StateID<S>::value = Machine<typename S::TOP>::theStateCount++;
 // Implementation for StateSpecification
 
 // Initiate state transition with 0 to six parameters.
-template <class S> inline void _StateSpecification::setState() {
+template <class S> void _StateSpecification::setState() {
   _MachineBase &m = _myStateInstance.machine();
   _StateInstance &instance = S::_getInstance(m);
   m.setPendingState(instance, &_theDefaultInitializer);
 }
 
-template <class S, class P1>
-inline void _StateSpecification::setState(const P1 &p1) {
+template <class S, class... P>
+inline void _StateSpecification::setState(const P... p) {
   _MachineBase &m = _myStateInstance.machine();
   _StateInstance &instance = S::_getInstance(m);
-  m.setPendingState(instance, new _InitializerMain<S, P1>(p1));
-}
-
-template <class S, class P1, class P2>
-inline void _StateSpecification::setState(const P1 &p1, const P2 &p2) {
-  _MachineBase &m = _myStateInstance.machine();
-  _StateInstance &instance = S::_getInstance(m);
-  m.setPendingState(instance, new _InitializerMain<S, P1, P2>(p1, p2));
-}
-
-template <class S, class P1, class P2, class P3>
-inline void _StateSpecification::setState(const P1 &p1, const P2 &p2,
-                                          const P3 &p3) {
-  _MachineBase &m = _myStateInstance.machine();
-  _StateInstance &instance = S::_getInstance(m);
-  m.setPendingState(instance, new _InitializerMain<S, P1, P2, P3>(p1, p2, p3));
-}
-
-template <class S, class P1, class P2, class P3, class P4>
-inline void _StateSpecification::setState(const P1 &p1, const P2 &p2,
-                                          const P3 &p3, const P4 &p4) {
-  _MachineBase &m = _myStateInstance.machine();
-  _StateInstance &instance = S::_getInstance(m);
-  m.setPendingState(instance,
-                    new _InitializerMain<S, P1, P2, P3, P4>(p1, p2, p3, p4));
-}
-
-template <class S, class P1, class P2, class P3, class P4, class P5>
-inline void _StateSpecification::setState(const P1 &p1, const P2 &p2,
-                                          const P3 &p3, const P4 &p4,
-                                          const P5 &p5) {
-  _MachineBase &m = _myStateInstance.machine();
-  _StateInstance &instance = S::_getInstance(m);
-  m.setPendingState(instance, new _InitializerMain<S, P1, P2, P3, P4, P5>(
-                                  p1, p2, p3, p4, p5));
-}
-
-template <class S, class P1, class P2, class P3, class P4, class P5, class P6>
-inline void _StateSpecification::setState(const P1 &p1, const P2 &p2,
-                                          const P3 &p3, const P4 &p4,
-                                          const P5 &p5, const P6 &p6) {
-  _MachineBase &m = _myStateInstance.machine();
-  _StateInstance &instance = S::_getInstance(m);
-  m.setPendingState(instance, new _InitializerMain<S, P1, P2, P3, P4, P5, P6>(
-                                  p1, p2, p3, p4, p5, p6));
+  m.setPendingState(instance, new _InitializerMain<S, P...>(p...));
 }
 
 // Initiate state transition to a state's history.
