@@ -869,245 +869,38 @@ template <class TOP> class IEvent : protected _IEventBase {
   friend class TopBase<TOP>;
 };
 
-// Event with one parameter
-// template <class TOP, class R, class... P> class _Event1 : public IEvent<TOP>
-// {
-//   typedef R (TOP::*Signature)(P...);
-//
-// public:
-//   _Event1(Signature handler, const typename DR<P...>::T p)
-//       : myHandler(handler), tuple_(std::tuple<DR<P...>::T>(p...)) {}
-//
-// protected:
-//   void dispatch(_StateInstance &instance) {
-//     TOP &behaviour = static_cast<TOP &>(instance.specification());
-//     (behaviour.*myHandler)(myParam1);
-//   }
-//
-//   Signature myHandler;
-//
-// private:
-//   template <std::size_t... Is>
-//   void callDispatchWithTuple(const std::tuple<P...> &tuple,
-//                              _StateInstance &instance,
-//                              std::index_sequence<Is...>) {
-//     // yadda(std::get<Is>(tuple)...);
-//     ::_VS8_Bug_101615::execute<S, P...>(instance, std::get<Is>(tuple)...);
-//   }
-//
-//   std::tuple<typename DR<P...>::T> tuple_;
-//   // typename DR<P1>::T myParam1;
-// };
-
-// Event with four parameters
-template <class TOP, class R, class P1, class P2, class P3, class P4, class P5,
-          class P6>
-class _Event6 : public IEvent<TOP> {
-  typedef R (TOP::*Signature)(P1, P2, P3, P4, P5, P6);
+template <class TOP, class R, class... P> class _Event : public IEvent<TOP> {
+  typedef R (TOP::*Signature)(P...);
 
 public:
-  _Event6(Signature handler, const typename DR<P1>::T &p1,
-          const typename DR<P2>::T &p2, const typename DR<P3>::T &p3,
-          const typename DR<P4>::T &p4, const typename DR<P5>::T &p5,
-          const typename DR<P6>::T &p6)
-      : myHandler(handler), myParam1(p1), myParam2(p2), myParam3(p3),
-        myParam4(p4), myParam5(p5), myParam6(p6) {}
+  _Event(Signature handler, const typename DR<P>::T... p)
+      : myHandler(handler), tuple_(std::tuple<typename DR<P>::T...>(p...)) {}
 
 protected:
   void dispatch(_StateInstance &instance) {
-    TOP &behaviour = static_cast<TOP &>(instance.specification());
-    (behaviour.*myHandler)(myParam1, myParam2, myParam3, myParam4, myParam5,
-                           myParam6);
+    callDispatchWithTuple(tuple_, instance,
+                          std::index_sequence_for<typename DR<P>::T...>());
   }
 
   Signature myHandler;
-  typename DR<P1>::T myParam1;
-  typename DR<P2>::T myParam2;
-  typename DR<P3>::T myParam3;
-  typename DR<P4>::T myParam4;
-  typename DR<P5>::T myParam5;
-  typename DR<P6>::T myParam6;
-};
 
-// Event with four parameters
-template <class TOP, class R, class P1, class P2, class P3, class P4, class P5>
-class _Event5 : public IEvent<TOP> {
-  typedef R (TOP::*Signature)(P1, P2, P3, P4, P5);
-
-public:
-  _Event5(Signature handler, const typename DR<P1>::T &p1,
-          const typename DR<P2>::T &p2, const typename DR<P3>::T &p3,
-          const typename DR<P4>::T &p4, const typename DR<P5>::T &p5)
-      : myHandler(handler), myParam1(p1), myParam2(p2), myParam3(p3),
-        myParam4(p4), myParam5(p5) {}
-
-protected:
-  void dispatch(_StateInstance &instance) {
+private:
+  template <std::size_t... Is>
+  void callDispatchWithTuple(const std::tuple<P...> &tuple,
+                             _StateInstance &instance,
+                             std::index_sequence<Is...>) {
     TOP &behaviour = static_cast<TOP &>(instance.specification());
-    (behaviour.*myHandler)(myParam1, myParam2, myParam3, myParam4, myParam5);
+    (behaviour.*myHandler)(std::get<Is>(tuple)...);
   }
 
-  Signature myHandler;
-  typename DR<P1>::T myParam1;
-  typename DR<P2>::T myParam2;
-  typename DR<P3>::T myParam3;
-  typename DR<P4>::T myParam4;
-  typename DR<P5>::T myParam5;
+  std::tuple<typename DR<P>::T...> tuple_;
 };
 
-// Event with four parameters
-template <class TOP, class R, class P1, class P2, class P3, class P4>
-class _Event4 : public IEvent<TOP> {
-  typedef R (TOP::*Signature)(P1, P2, P3, P4);
-
-public:
-  _Event4(Signature handler, const typename DR<P1>::T &p1,
-          const typename DR<P2>::T &p2, const typename DR<P3>::T &p3,
-          const typename DR<P4>::T &p4)
-      : myHandler(handler), myParam1(p1), myParam2(p2), myParam3(p3),
-        myParam4(p4) {}
-
-protected:
-  void dispatch(_StateInstance &instance) {
-    TOP &behaviour = static_cast<TOP &>(instance.specification());
-    (behaviour.*myHandler)(myParam1, myParam2, myParam3, myParam4);
-  }
-
-  Signature myHandler;
-  typename DR<P1>::T myParam1;
-  typename DR<P2>::T myParam2;
-  typename DR<P3>::T myParam3;
-  typename DR<P4>::T myParam4;
-};
-
-// Event with three parameters
-template <class TOP, class R, class P1, class P2, class P3>
-class _Event3 : public IEvent<TOP> {
-  typedef R (TOP::*Signature)(P1, P2, P3);
-
-public:
-  _Event3(Signature handler, const typename DR<P1>::T &p1,
-          const typename DR<P2>::T &p2, const typename DR<P3>::T &p3)
-      : myHandler(handler), myParam1(p1), myParam2(p2), myParam3(p3) {}
-
-protected:
-  void dispatch(_StateInstance &instance) {
-    TOP &behaviour = static_cast<TOP &>(instance.specification());
-    (behaviour.*myHandler)(myParam1, myParam2, myParam3);
-  }
-
-  Signature myHandler;
-  typename DR<P1>::T myParam1;
-  typename DR<P2>::T myParam2;
-  typename DR<P3>::T myParam3;
-};
-
-// Event with two parameters
-template <class TOP, class R, class P1, class P2>
-class _Event2 : public IEvent<TOP> {
-  typedef R (TOP::*Signature)(P1, P2);
-
-public:
-  _Event2(Signature handler, const typename DR<P1>::T &p1,
-          const typename DR<P2>::T &p2)
-      : myHandler(handler), myParam1(p1), myParam2(p2) {}
-
-protected:
-  void dispatch(_StateInstance &instance) {
-    TOP &behaviour = static_cast<TOP &>(instance.specification());
-    (behaviour.*myHandler)(myParam1, myParam2);
-  }
-
-  Signature myHandler;
-  typename DR<P1>::T myParam1;
-  typename DR<P2>::T myParam2;
-};
-
-// Event with one parameter
-template <class TOP, class R, class P1> class _Event1 : public IEvent<TOP> {
-  typedef R (TOP::*Signature)(P1);
-
-public:
-  _Event1(Signature handler, const typename DR<P1>::T &p1)
-      : myHandler(handler), myParam1(p1) {}
-
-protected:
-  void dispatch(_StateInstance &instance) {
-    TOP &behaviour = static_cast<TOP &>(instance.specification());
-    (behaviour.*myHandler)(myParam1);
-  }
-
-  Signature myHandler;
-  typename DR<P1>::T myParam1;
-};
-
-// Event with no parameters
-template <class TOP, class R> class _Event0 : public IEvent<TOP> {
-  typedef R (TOP::*Signature)();
-
-public:
-  _Event0(Signature handler) : myHandler(handler) {}
-
-protected:
-  void dispatch(_StateInstance &instance) {
-    TOP &behaviour = static_cast<TOP &>(instance.specification());
-    (behaviour.*myHandler)();
-  }
-
-  Signature myHandler;
-};
-
-// Event creating functions using type inference
-template <class P1, class P2, class P3, class P4, class P5, class P6, class R,
-          class TOP>
-inline IEvent<TOP> *
-Event(R (TOP::*handler)(P1, P2, P3, P4, P5, P6), const typename DR<P1>::T &p1,
-      const typename DR<P2>::T &p2, const typename DR<P3>::T &p3,
-      const typename DR<P4>::T &p4, const typename DR<P5>::T &p5,
-      const typename DR<P6>::T &p6) {
-  return new _Event6<TOP, R, P1, P2, P3, P4, P5, P6>(handler, p1, p2, p3, p4,
-                                                     p5, p6);
-}
-
-// Event creating functions using type inference
-template <class P1, class P2, class P3, class P4, class P5, class R, class TOP>
-inline IEvent<TOP> *
-Event(R (TOP::*handler)(P1, P2, P3, P4, P5), const typename DR<P1>::T &p1,
-      const typename DR<P2>::T &p2, const typename DR<P3>::T &p3,
-      const typename DR<P4>::T &p4, const typename DR<P5>::T &p5) {
-  return new _Event5<TOP, R, P1, P2, P3, P4, P5>(handler, p1, p2, p3, p4, p5);
-}
-
-// Event creating functions using type inference
-template <class P1, class P2, class P3, class P4, class R, class TOP>
-inline IEvent<TOP> *
-Event(R (TOP::*handler)(P1, P2, P3, P4), const typename DR<P1>::T &p1,
-      const typename DR<P2>::T &p2, const typename DR<P3>::T &p3,
-      const typename DR<P4>::T &p4) {
-  return new _Event4<TOP, R, P1, P2, P3, P4>(handler, p1, p2, p3, p4);
-}
-
-template <class P1, class P2, class P3, class R, class TOP>
-inline IEvent<TOP> *
-Event(R (TOP::*handler)(P1, P2, P3), const typename DR<P1>::T &p1,
-      const typename DR<P2>::T &p2, const typename DR<P3>::T &p3) {
-  return new _Event3<TOP, R, P1, P2, P3>(handler, p1, p2, p3);
-}
-
-template <class P1, class P2, class R, class TOP>
-inline IEvent<TOP> *Event(R (TOP::*handler)(P1, P2),
-                          const typename DR<P1>::T &p1,
-                          const typename DR<P2>::T &p2) {
-  return new _Event2<TOP, R, P1, P2>(handler, p1, p2);
-}
-
-template <class P1, class R, class TOP>
-inline IEvent<TOP> *Event(R (TOP::*handler)(P1), const typename DR<P1>::T &p1) {
-  return new _Event1<TOP, R, P1>(handler, p1);
-}
-
-template <class R, class TOP> inline IEvent<TOP> *Event(R (TOP::*handler)()) {
-  return new _Event0<TOP, R>(handler);
+// // Event creating functions using type inference
+template <class... P, class R, class TOP>
+inline IEvent<TOP> *Event(R (TOP::*handler)(P...),
+                          const typename DR<P>::T... p) {
+  return new _Event<TOP, R, P...>(handler, p...);
 }
 
 } // namespace Macho
@@ -1191,12 +984,10 @@ public:
   _InitializerMain(P... p) : tuple_(std::tuple<P...>(p...)) {}
 
   virtual _Initializer *clone() {
-    // return new _InitializerMain<S, P>(myParam1);
     return cloneWithTuple(tuple_, std::index_sequence_for<P...>());
   }
 
   virtual void execute(_StateInstance &instance) {
-    // ::_VS8_Bug_101615::execute<S, P1>(instance, myParam1);
     callExecuteWithTuple(tuple_, instance, std::index_sequence_for<P...>());
   }
 
@@ -1206,7 +997,6 @@ private:
   void callExecuteWithTuple(const std::tuple<P...> &tuple,
                             _StateInstance &instance,
                             std::index_sequence<Is...>) {
-    // yadda(std::get<Is>(tuple)...);
     ::_VS8_Bug_101615::execute<S, P...>(instance, std::get<Is>(tuple)...);
   }
 
@@ -1605,7 +1395,7 @@ template <class S> void _StateSpecification::setState() {
 }
 
 template <class S, class... P>
-inline void _StateSpecification::setState(const P... p) {
+void _StateSpecification::setState(const P... p) {
   _MachineBase &m = _myStateInstance.machine();
   _StateInstance &instance = S::_getInstance(m);
   m.setPendingState(instance, new _InitializerMain<S, P...>(p...));
