@@ -152,14 +152,23 @@ int main() {
 Output is:
 
 Top::entry
+
 Super::entry
+
 StateA::entry
+
 StateA::exit
+
 StateB::entry
+
 StateB::exit
+
 StateA::entry
+
 StateA::exit
+
 Super::exit
+
 Top::exit
 
 
