@@ -8,19 +8,18 @@
 #include <iostream>
 using namespace std;
 
-
 namespace HelloWorld {
-	TOPSTATE(Top) {
-		STATE(Top)
+TOPSTATE(Top){STATE(Top)
 
-	private:
-		void entry() { cout << "Hello World!" << endl; }
-		void exit() { cout << "Goodbye world!" << endl; }
-	};
+                  private : void entry(){cout << "Hello World!" << endl;
+}
+void exit() { cout << "Goodbye world!" << endl; }
+}
+;
 }
 
 int main() {
-	Macho::Machine<HelloWorld::Top> m;
+  Macho::Machine<HelloWorld::Top> m;
 
-	return 0;
+  return 0;
 }

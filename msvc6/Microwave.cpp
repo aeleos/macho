@@ -9,188 +9,168 @@ using namespace std;
 
 #include "Macho.hpp"
 
-
 // Simple microwave simulation
 namespace Microwave {
 
-	//////////////////////////////////////////////////////////////////////
-	// State declarations
+//////////////////////////////////////////////////////////////////////
+// State declarations
 
-	// Machine's top state
-	TOPSTATE(Top) {
+// Machine's top state
+TOPSTATE(Top) {
 
-		// Top state data (visible to all substates)
-		struct Box {
-			Box() : myCookingTime(0) {}
-			void printTimer() { cout << "  Timer set to " << myCookingTime << " minutes" << endl; }
-			void incrementTimer() { ++myCookingTime; }
-			void decrementTimer() { -- myCookingTime; }
-			void resetTimer() { myCookingTime = 0; }
-			int getRemainingTime() { return myCookingTime; }
-		private:
-			int myCookingTime;
-		};
+  // Top state data (visible to all substates)
+  struct Box {
+    Box() : myCookingTime(0) {}
+    void printTimer() {
+      cout << "  Timer set to " << myCookingTime << " minutes" << endl;
+    }
+    void incrementTimer() { ++myCookingTime; }
+    void decrementTimer() { --myCookingTime; }
+    void resetTimer() { myCookingTime = 0; }
+    int getRemainingTime() { return myCookingTime; }
 
-		STATE(Top)
+  private:
+    int myCookingTime;
+  };
 
-		// Machine's event protocol
-		virtual void open() {}
-		virtual void close() {}
-		virtual void minute() {}	// Increment timer by a minute
-		virtual void start() {}		// Start cooking
-		virtual void stop() {}		// Stop cooking
-		virtual void tick() {}		// Minute has passed
+  STATE(Top)
 
-	private:
-		// Initial entry action
-		void init();
-	};
+  // Machine's event protocol
+  virtual void open() {}
+  virtual void close() {}
+  virtual void minute() {} // Increment timer by a minute
+  virtual void start() {}  // Start cooking
+  virtual void stop() {}   // Stop cooking
+  virtual void tick() {}   // Minute has passed
 
-	// Microwave has been opened
-	SUBSTATE(Disabled, Top) {
-		STATE(Disabled)
+private:
+  // Initial entry action
+  void init();
+};
 
-		// Event handler
-		void close();
+// Microwave has been opened
+SUBSTATE(Disabled, Top) {
+  STATE(Disabled)
 
-	private:
-		// Entry and exit actions of state
-		void entry();
-		void exit();
-	};
+  // Event handler
+  void close();
 
-	// Microwave is ready
-	SUBSTATE(Operational, Top) {
-		STATE(Operational)
+private:
+  // Entry and exit actions of state
+  void entry();
+  void exit();
+};
 
-		// State has history enabled
-		DEEPHISTORY()
+// Microwave is ready
+SUBSTATE(Operational, Top) {
+  STATE(Operational)
 
-		void open();
-		void stop();
+  // State has history enabled
+  DEEPHISTORY()
 
-	private:
-		void init();
-	};
+  void open();
+  void stop();
 
-	// Microwave is idling
-	SUBSTATE(Idle, Operational) {
-		STATE(Idle)
+private:
+  void init();
+};
 
-		void minute();
+// Microwave is idling
+SUBSTATE(Idle, Operational) {
+  STATE(Idle)
 
-	private:
-		void entry();
-	};
+  void minute();
 
-	// Microwave is being programmed
-	SUBSTATE(Programmed, Operational) {
-		STATE(Programmed)
+private:
+  void entry();
+};
 
-		void minute();
-		void start();
-	};
+// Microwave is being programmed
+SUBSTATE(Programmed, Operational) {
+  STATE(Programmed)
 
-	// Microwave is heating
-	SUBSTATE(Cooking, Programmed) {
-		STATE(Cooking)
+  void minute();
+  void start();
+};
 
-		void tick();
+// Microwave is heating
+SUBSTATE(Cooking, Programmed) {
+  STATE(Cooking)
 
-	private:
-		void entry();
-		void exit();
-	};
+  void tick();
 
+private:
+  void entry();
+  void exit();
+};
 
-	//////////////////////////////////////////////////////////////////////
-	// Event handler and box implementations
+//////////////////////////////////////////////////////////////////////
+// Event handler and box implementations
 
-	// Top state
-	void Top::init() {
-		Operational::setState(machine());
-	}
+// Top state
+void Top::init() { Operational::setState(machine()); }
 
-	// State Disabled
-	void Disabled::entry() {
-		cout << "  Microwave opened" << endl;
-	}
-	void Disabled::exit() {
-		cout << "  Microwave closed" << endl;
-	}
-	void Disabled::close() {
-		Operational::setState(machine());
-	}
+// State Disabled
+void Disabled::entry() { cout << "  Microwave opened" << endl; }
+void Disabled::exit() { cout << "  Microwave closed" << endl; }
+void Disabled::close() { Operational::setState(machine()); }
 
-	// State Operational
-	void Operational::init() {
-		setState<Idle>();
-	}
-	void Operational::open() {
-		setState<Disabled>();
-	}
-	void Operational::stop() {
-		setState<Idle>();
-	}
+// State Operational
+void Operational::init() { setState<Idle>(); }
+void Operational::open() { setState<Disabled>(); }
+void Operational::stop() { setState<Idle>(); }
 
-	// State Idle
-	void Idle::entry() {
-		TOP::box().resetTimer();
-		cout << "  Microwave ready" << endl;
-	}
-	void Idle::minute() {
-		Programmed::setState(machine());
-		dispatch(Event(&TOP::minute));
-	}
+// State Idle
+void Idle::entry() {
+  TOP::box().resetTimer();
+  cout << "  Microwave ready" << endl;
+}
+void Idle::minute() {
+  Programmed::setState(machine());
+  dispatch(Event(&TOP::minute));
+}
 
-	// State Programmed
-	void Programmed::minute() {
-		TOP::box().incrementTimer();
-		TOP::box().printTimer();
-	}
-	void Programmed::start() {
-		Cooking::setState(machine());
-	}
+// State Programmed
+void Programmed::minute() {
+  TOP::box().incrementTimer();
+  TOP::box().printTimer();
+}
+void Programmed::start() { Cooking::setState(machine()); }
 
-	// State Cooking
-	void Cooking::entry() {
-		cout << "  Heating on" << endl;
-	}
-	void Cooking::exit() {
-		cout << "  Heating off" << endl;
-	}
-	void Cooking::tick() {
-		cout << "  Clock tick" << endl;
+// State Cooking
+void Cooking::entry() { cout << "  Heating on" << endl; }
+void Cooking::exit() { cout << "  Heating off" << endl; }
+void Cooking::tick() {
+  cout << "  Clock tick" << endl;
 
-		TOP::Box & tb = TOP::box();
-		tb.decrementTimer();
-		if (tb.getRemainingTime() == 0) {
-			cout << "  Finished" << endl;
-			Idle::setState(machine());
-		} else
-			tb.printTimer();
-	}
+  TOP::Box &tb = TOP::box();
+  tb.decrementTimer();
+  if (tb.getRemainingTime() == 0) {
+    cout << "  Finished" << endl;
+    Idle::setState(machine());
+  } else
+    tb.printTimer();
+}
 
 } // namespace Microwave
 
-
 int main() {
-	Macho::Machine<Microwave::Top> m;
+  Macho::Machine<Microwave::Top> m;
 
-	cout << "Lets cook ourself a TV dinner:" << endl;
+  cout << "Lets cook ourself a TV dinner:" << endl;
 
-	m->minute();
-	m->minute();
-	m->minute();
-	m->start();
-	m->tick();
-	m->open();
-	cout << "Adding a little spice..." << endl;
-	m->close();
-	m->tick();
-	m->tick();
+  m->minute();
+  m->minute();
+  m->minute();
+  m->start();
+  m->tick();
+  m->open();
+  cout << "Adding a little spice..." << endl;
+  m->close();
+  m->tick();
+  m->tick();
 
-	cout << "Now there is the remote...?" << endl;
+  cout << "Now there is the remote...?" << endl;
 
-	return 0;
+  return 0;
 }
