@@ -162,6 +162,9 @@ Top::exit
 
 Version History:
 
+		0.9.8 (released 2017-03-26):
+		 - Implemented parameter packs to allow for any number of parameters
+
 	  0.9.7 (released 2007-12-1):
 		 - Introduction of template states
 		 - fixed rare memory leak
