@@ -272,7 +272,6 @@ public:                                                                        \
   using LINK::dispatch;                                                        \
   using LINK::machine;                                                         \
   /* must have these methods to quieten gcc */                                 \
-  template <class U> void setState() { LINK::template setState<U>(); }         \
   template <class U, class... P> void setState(const P... p) {                 \
     LINK::template setState<U, P...>(p...);                                    \
   }                                                                            \
@@ -463,8 +462,6 @@ protected:
   // Initiating more than one transition is considered an error!
   // The new state may receive parameters for its 'init' methods:
   // setState<StateA>("someData");
-  template <class S> void setState();
-
   template <class S, class... P> void setState(const P... p);
 
   // Initiate transition to a state's history.
@@ -1196,9 +1193,7 @@ protected:
 // Deprecated: alias for Alias
 typedef Alias StateAlias;
 
-// Create alias with 0 to 6 parameters.
-template <class S> Alias State() { return Alias(S::key()); }
-
+// Create alias with any amount parameters.
 template <class S, class... P> Alias State(const P... p) {
   return Alias(S::key(), new _InitializerMain<S, P...>(p...));
 }
@@ -1387,13 +1382,7 @@ const ID StateID<S>::value = Machine<typename S::TOP>::theStateCount++;
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation for StateSpecification
 
-// Initiate state transition with 0 to six parameters.
-template <class S> void _StateSpecification::setState() {
-  _MachineBase &m = _myStateInstance.machine();
-  _StateInstance &instance = S::_getInstance(m);
-  m.setPendingState(instance, &_theDefaultInitializer);
-}
-
+// Initiate state transition with any amount parameters.
 template <class S, class... P>
 void _StateSpecification::setState(const P... p) {
   _MachineBase &m = _myStateInstance.machine();
